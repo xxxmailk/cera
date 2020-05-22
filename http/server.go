@@ -33,7 +33,7 @@ type StartHttpServer interface {
 	SetHostname(hostname string)
 	SetRouter(handler router.IRouterHandler)
 	SetIdleTimeout(sec int)
-	Start()
+	Start() error
 	UseMiddleWare(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
 	AtLast(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
 }
@@ -87,7 +87,7 @@ func (s *Serve) SetRouter(handler router.IRouterHandler) {
 	s.router = handler
 }
 
-func (s *Serve) Start() {
+func (s *Serve) Start() error {
 	s.SetHandle(s.httpHandler)
 	server := &fasthttp.Server{
 		// allocation http handle with domain name
@@ -101,7 +101,7 @@ func (s *Serve) Start() {
 	err := server.ListenAndServe(net.JoinHostPort(s.ip, s.port))
 
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 }
