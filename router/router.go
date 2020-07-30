@@ -81,7 +81,7 @@ import (
 )
 
 var (
-	defaultContentType = []byte("text/plain; charset=utf-8")
+	defaultContentType = []byte("text/html; charset=utf-8")
 	questionMark       = []byte("?")
 	logger             *logrus.Logger
 )
