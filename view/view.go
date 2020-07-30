@@ -112,6 +112,7 @@ func (r *View) After() {}
 
 func (r *View) Render() {
 	t := template.Must(template.ParseGlob("./template/*.htm"))
+	r.Ctx.Response.Header.SetContentType("text/html; charset=utf-8")
 	err := t.Execute(r.Ctx.Response.BodyWriter(), r.Data)
 	if err != nil {
 		log.Println(err)
