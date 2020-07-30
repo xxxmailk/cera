@@ -15,16 +15,16 @@ func (r *ApiView) Render() {
 
 // render templates
 func (r *ApiView) JsonRender() {
-	defer r.Ctx.Done()
+	ctx := r.GetCtx()
 	rs, err := json.Marshal(r.Data)
 	if err != nil {
-		_, err := r.Ctx.Write([]byte(err.Error()))
+		_, err := ctx.Write([]byte(err.Error()))
 		log.Println("error: render data to json failed, ", err)
 		return
 	}
 	// set application/json header
-	r.Ctx.Response.Header.Set("Content-type", "application/json")
-	_, err = r.Ctx.Write(rs)
+	ctx.Response.Header.Set("Content-type", "application/json")
+	_, err = ctx.Write(rs)
 	if err != nil {
 		log.Println("error: write json result to client failed,", err)
 		return

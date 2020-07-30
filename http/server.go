@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"github.com/xxxmailk/cera/router"
 	"math/big"
@@ -24,8 +24,9 @@ type SimpleLogger interface {
 	Fatalf(string, ...interface{})
 }
 
-func NewSimpleLogger() log.Logger {
-	return log.NewLogger(os.Stdout)
+func NewSimpleLogger() SimpleLogger {
+	l := logrus.New()
+	return l
 }
 
 type StartHttpServer interface {
@@ -99,11 +100,7 @@ func (s *Serve) Start() error {
 	}
 	s.logger.Infof("starting web server and listening on %s:%s", s.ip, s.port)
 	err := server.ListenAndServe(net.JoinHostPort(s.ip, s.port))
-
-	if err != nil {
-		return err
-	}
-
+	return err
 }
 
 func (s *Serve) StartTls() {

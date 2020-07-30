@@ -19,9 +19,9 @@ func init() {
 	sha1.New()
 }
 
-type IMethodViewer interface {
+type MethodViewer interface {
+	viewer
 	Init()
-	Before()
 	Get()
 	Post()
 	Head()
@@ -30,13 +30,10 @@ type IMethodViewer interface {
 	Patch()
 	Delete()
 	Trace()
-	GetCtx() *fasthttp.RequestCtx
-	SetCtx(ctx *fasthttp.RequestCtx)
-	After()
 	Render()
 }
 
-type IViewer interface {
+type viewer interface {
 	Before()
 	After()
 	GetCtx() *fasthttp.RequestCtx
@@ -150,7 +147,7 @@ func (r *View) SetCtx(ctx *fasthttp.RequestCtx) {
 	r.Ctx = ctx
 }
 
-func Switcher(v IMethodViewer) {
+func Switcher(v MethodViewer) {
 	// running before method priority
 	ctx := v.GetCtx()
 	v.Before()

@@ -162,53 +162,56 @@ func New() *Router {
 }
 
 // check view is implement the view.IMethodViewer or not
-func checkImplement(v interface{}) bool {
-	if _, ok := v.(view.IMethodViewer); !ok {
-		logger.Errorf("view function")
-		return false
-	}
-	return true
+//func checkImplement(v interface{}) bool {
+//	if _, ok := v.(view.MethodViewer); !ok {
+//		logger.Errorf("view function")
+//		return false
+//	}
+//	return true
+//}
+
+func (r *Router) AutoMethod(path string, handler view.MethodViewer){
+	r.GET(path, handler)
+	r.HEAD(path, handler)
+	r.OPTIONS(path, handler)
+	r.POST(path, handler)
+	r.PUT(path, handler)
+	r.PATCH(path, handler)
+	r.DELETE(path, handler)
 }
 
 // GET is a shortcut for router.Handle("GET", path, handle)
-func (r *Router) GET(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) GET(path string, handle view.MethodViewer) {
 	r.Handle("GET", path, handle)
 }
 
 // HEAD is a shortcut for router.Handle("HEAD", path, handle)
-func (r *Router) HEAD(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) HEAD(path string, handle view.MethodViewer) {
 	r.Handle("HEAD", path, handle)
 }
 
 // OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle)
-func (r *Router) OPTIONS(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) OPTIONS(path string, handle view.MethodViewer) {
 	r.Handle("OPTIONS", path, handle)
 }
 
 // POST is a shortcut for router.Handle("POST", path, handle)
-func (r *Router) POST(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) POST(path string, handle view.MethodViewer) {
 	r.Handle("POST", path, handle)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handle)
-func (r *Router) PUT(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) PUT(path string, handle view.MethodViewer) {
 	r.Handle("PUT", path, handle)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handle)
-func (r *Router) PATCH(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) PATCH(path string, handle view.MethodViewer) {
 	r.Handle("PATCH", path, handle)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handle)
-func (r *Router) DELETE(path string, handle interface{}) {
-	checkImplement(handle)
+func (r *Router) DELETE(path string, handle view.MethodViewer) {
 	r.Handle("DELETE", path, handle)
 }
 
@@ -278,10 +281,10 @@ func (r *Router) recv(ctx *fasthttp.RequestCtx) {
 // If the path was found, it returns the handle function and the path parameter
 // values. Otherwise the third return value indicates whether a redirection to
 // the same path with an extra / without the trailing slash should be performed.
-func (r *Router) Lookup(method, path string, ctx *fasthttp.RequestCtx) (view.IMethodViewer, bool) {
+func (r *Router) Lookup(method, path string, ctx *fasthttp.RequestCtx) (view.MethodViewer, bool) {
 	if root := r.trees[method]; root != nil {
 		v, b := root.getValue(path, ctx)
-		return v.(view.IMethodViewer), b
+		return v.(view.MethodViewer), b
 	}
 	return nil, false
 }
@@ -334,8 +337,8 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	method := string(ctx.Method())
 	if root := r.trees[method]; root != nil {
 		if f, tsr := root.getValue(path, ctx); f != nil {
-			f.(view.IMethodViewer).Init()
-			view.Switcher(f.(view.IMethodViewer))
+			f.(view.MethodViewer).Init()
+			view.Switcher(f.(view.MethodViewer))
 			return
 		} else if method != "CONNECT" && path != "/" {
 			code := 301 // Permanent redirect, request with GET method
