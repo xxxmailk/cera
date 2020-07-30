@@ -79,10 +79,10 @@ func newActionId() [16]byte {
 }
 
 type View struct {
-	JinJaTpl bool
-	Data     map[string]interface{} // stored user values
-	Ctx      *fasthttp.RequestCtx
-	Cookie   *fasthttp.Cookie
+	Tpl    string                 // template name
+	Data   map[string]interface{} // stored user values
+	Ctx    *fasthttp.RequestCtx
+	Cookie *fasthttp.Cookie
 }
 
 // combine this struct and rewrite those functions to reply http methods
@@ -113,7 +113,7 @@ func (r *View) After() {}
 func (r *View) Render() {
 	t := template.Must(template.ParseGlob("./template/*.htm"))
 	r.Ctx.Response.Header.SetContentType("text/html; charset=utf-8")
-	err := t.Execute(r.Ctx.Response.BodyWriter(), r.Data)
+	err := t.ExecuteTemplate(r.Ctx.Response.BodyWriter(), r.Tpl, r.Data)
 	if err != nil {
 		log.Println(err)
 		return
