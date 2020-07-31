@@ -247,7 +247,7 @@ type FileServer struct {
 	view.View
 }
 
-func (r *FileServer) Switcher() {
+func (r *FileServer) Get() {
 	r.fileHandler(r.ctx)
 }
 
