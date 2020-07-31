@@ -401,8 +401,8 @@ walk: // outer loop for walking the tree
 						// save param value
 						ctx.SetUserValue(n.path[2:], path)
 					}
-					tp := reflect.TypeOf(n.handle)
-					handle = reflect.New(tp).Interface().(view.MethodViewer)
+					//tp := reflect.TypeOf(n.handle)
+					//handle = reflect.New(tp).Interface().(view.MethodViewer)
 					handle.(view.MethodViewer).SetCtx(ctx)
 					return
 
