@@ -170,7 +170,7 @@ func New() *Router {
 //	return true
 //}
 
-func (r *Router) AutoMethod(path string, handler view.MethodViewer){
+func (r *Router) AutoMethod(path string, handler view.MethodViewer) {
 	r.GET(path, handler)
 	r.HEAD(path, handler)
 	r.OPTIONS(path, handler)
@@ -223,7 +223,7 @@ func (r *Router) DELETE(path string, handle view.MethodViewer) {
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (r *Router) Handle(method, path string, handle interface{}) {
+func (r *Router) Handle(method, path string, handle view.MethodViewer) {
 	if path[0] != '/' {
 		panic("path must begin with '/' in path '" + path + "'")
 	}
@@ -337,8 +337,8 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	method := string(ctx.Method())
 	if root := r.trees[method]; root != nil {
 		if f, tsr := root.getValue(path, ctx); f != nil {
-			f.(view.MethodViewer).Init()
-			view.Switcher(f.(view.MethodViewer))
+			f.Init()
+			view.Switcher(f)
 			return
 		} else if method != "CONNECT" && path != "/" {
 			code := 301 // Permanent redirect, request with GET method

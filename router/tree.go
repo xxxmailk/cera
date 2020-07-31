@@ -50,7 +50,7 @@ type node struct {
 	maxParams uint8
 	indices   string
 	children  []*node
-	handle    interface{} // handle must be implement the view.IMethodViewer
+	handle    view.MethodViewer // handle must be implement the view.IMethodViewer
 	//handle    fasthttp.RequestHandler
 	priority uint32
 }
@@ -83,7 +83,7 @@ func (n *node) incrementChildPrio(pos int) int {
 
 // addRoute adds a node with the given handle to the path.
 // Not concurrency-safe!
-func (n *node) addRoute(path string, handle interface{}) {
+func (n *node) addRoute(path string, handle view.MethodViewer) {
 	fullPath := path
 	n.priority++
 	numParams := countParams(path)
@@ -210,7 +210,7 @@ func (n *node) addRoute(path string, handle interface{}) {
 	}
 }
 
-func (n *node) insertChild(numParams uint8, path, fullPath string, handle interface{}) {
+func (n *node) insertChild(numParams uint8, path, fullPath string, handle view.MethodViewer) {
 	var offset int // already handled bytes of the path
 
 	// find prefix until first wildcard (beginning with ':'' or '*'')
@@ -328,7 +328,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle interf
 // If no handle can be found, a TSR (trailing slash redirect) recommendation is
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
-func (n *node) getValue(path string, ctx *fasthttp.RequestCtx) (handle interface{}, tsr bool) {
+func (n *node) getValue(path string, ctx *fasthttp.RequestCtx) (handle view.MethodViewer, tsr bool) {
 walk: // outer loop for walking the tree
 	for {
 		if len(path) > len(n.path) {
