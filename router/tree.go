@@ -403,7 +403,7 @@ walk: // outer loop for walking the tree
 					}
 					//tp := reflect.TypeOf(n.handle)
 					//handle = reflect.New(tp).Interface().(view.MethodViewer)
-					handle.(view.MethodViewer).SetCtx(ctx)
+					n.handle.(view.MethodViewer).SetCtx(ctx)
 					return
 
 				default:
@@ -414,7 +414,6 @@ walk: // outer loop for walking the tree
 			// We should have reached the node containing the handle.
 			// Check if this node has a handle registered.
 			if handle = n.handle; handle != nil {
-				handle = handle.(view.MethodViewer)
 				handle.(view.MethodViewer).SetCtx(ctx)
 				return
 			}
