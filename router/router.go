@@ -259,7 +259,7 @@ func (r *FileServer) Get() {
 // Internally a http.FileServer is used, therefore http.NotFound is used instead
 // of the Router's NotFound handler.
 //     router.ServeFiles("/src/*filepath", "/var/www")
-func (r *Router) ServeFiles(path string, rootPath string) {
+func (r *Router) StaticServer(path string, rootPath string) {
 	if len(path) < 10 || path[len(path)-10:] != "/*filepath" {
 		panic("path must end with /*filepath in path '" + path + "'")
 	}
@@ -341,11 +341,11 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 			view.Switcher(f)
 			return
 		} else if method != "CONNECT" && path != "/" {
-			code := 301 // Permanent redirect, request with GET method
+			//code := 301 // Permanent redirect, request with GET method
 			if method != "GET" {
 				// Temporary redirect, request with same method
 				// As of Go 1.3, Go does not support status code 308.
-				code = 307
+				//code = 307
 			}
 
 			if tsr && r.RedirectTrailingSlash {
