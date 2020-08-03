@@ -1,123 +1,66 @@
-// Copyright 2013 Julien Schmidt. All rights reserved.
-// Based on the path package, Copyright 2009 The Go Authors.
-// Use of this source code is governed by a BSD-style license that can be found
-// in the LICENSE file.
-
 package router
 
-// CleanPath is the URL version of path.Clean, it returns a canonical URL path
-// for p, eliminating . and .. elements.
-//
-// The following rules are applied iteratively until no further processing can
-// be done:
-//	1. Replace multiple slashes with a single slash.
-//	2. Eliminate each . path name element (the current directory).
-//	3. Eliminate each inner .. path name element (the parent directory)
-//	   along with the non-.. element that precedes it.
-//	4. Eliminate .. elements that begin a rooted path:
-//	   that is, replace "/.." by "/" at the beginning of a path.
-//
-// If the result of this process is an empty string, "/" is returned
-func CleanPath(p string) string {
-	// Turn empty string into "/"
-	if p == "" {
-		return "/"
+import "github.com/savsgio/gotils"
+
+// cleanPath removes the '.' if it is the last character of the route
+func cleanPath(path string) string {
+	lenPath := len(path)
+
+	if path[lenPath-1] == '.' {
+		path = path[:lenPath-1]
 	}
 
-	n := len(p)
-	var buf []byte
-
-	// Invariants:
-	//      reading from path; r is index of next byte to process.
-	//      writing to buf; w is index of next byte to write.
-
-	// path must start with '/'
-	r := 1
-	w := 1
-
-	if p[0] != '/' {
-		r = 0
-		buf = make([]byte, n+1)
-		buf[0] = '/'
-	}
-
-	trailing := n > 2 && p[n-1] == '/'
-
-	// A bit more clunky without a 'lazybuf' like the path package, but the loop
-	// gets completely inlined (bufApp). So in contrast to the path package this
-	// loop has no expensive function calls (except 1x make)
-
-	for r < n {
-		switch {
-		case p[r] == '/':
-			// empty path element, trailing slash is added after the end
-			r++
-
-		case p[r] == '.' && r+1 == n:
-			trailing = true
-			r++
-
-		case p[r] == '.' && p[r+1] == '/':
-			// . element
-			r++
-
-		case p[r] == '.' && p[r+1] == '.' && (r+2 == n || p[r+2] == '/'):
-			// .. element: remove to last /
-			r += 2
-
-			if w > 1 {
-				// can backtrack
-				w--
-
-				if buf == nil {
-					for w > 1 && p[w] != '/' {
-						w--
-					}
-				} else {
-					for w > 1 && buf[w] != '/' {
-						w--
-					}
-				}
-			}
-
-		default:
-			// real path element.
-			// add slash if needed
-			if w > 1 {
-				bufApp(&buf, p, w, '/')
-				w++
-			}
-
-			// copy element
-			for r < n && p[r] != '/' {
-				bufApp(&buf, p, w, p[r])
-				w++
-				r++
-			}
-		}
-	}
-
-	// re-append trailing slash
-	if trailing && w > 1 {
-		bufApp(&buf, p, w, '/')
-		w++
-	}
-
-	if buf == nil {
-		return p[:w]
-	}
-	return string(buf[:w])
+	return path
 }
 
-// internal helper to lazily create a buffer if necessary
-func bufApp(buf *[]byte, s string, w int, c byte) {
-	if *buf == nil {
-		if s[w] == c {
-			return
+// getOptionalPaths returns all possible paths when the original path
+// has optional arguments
+func getOptionalPaths(path string) []string {
+	paths := make([]string, 0)
+
+	start := 0
+walk:
+	for {
+		if start >= len(path) {
+			return paths
 		}
 
-		*buf = make([]byte, len(s))
-		copy(*buf, s[:w])
+		c := path[start]
+		start++
+
+		if c != '{' {
+			continue
+		}
+
+		newPath := ""
+		questionMarkIndex := -1
+
+		for end, c := range []byte(path[start:]) {
+			switch c {
+			case '}':
+				if questionMarkIndex == -1 {
+					continue walk
+				}
+
+				end++
+				newPath += path[questionMarkIndex+1 : start+end]
+
+				path = path[:questionMarkIndex] + path[questionMarkIndex+1:] // remove '?'
+				paths = append(paths, newPath)
+				start += end - 1
+
+				continue walk
+
+			case '?':
+				questionMarkIndex = start + end
+				newPath += path[:questionMarkIndex]
+
+				// include the path without the wildcard
+				// -2 due to remove the '/' and '{'
+				if !gotils.StringSliceInclude(paths, path[:start-2]) {
+					paths = append(paths, path[:start-2])
+				}
+			}
+		}
 	}
-	(*buf)[w] = c
 }

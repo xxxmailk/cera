@@ -1,18 +1,18 @@
-// Copyright 2013 Julien Schmidt. All rights reserved.
-// Based on the path package, Copyright 2009 The Go Authors.
-// Use of this source code is governed by a BSD-style license that can be found
-// in the LICENSE file.
-
 package router
 
 import (
+	"reflect"
 	"runtime"
 	"testing"
+
+	"github.com/valyala/fasthttp"
 )
 
-var cleanTests = []struct {
+type cleanPathTest struct {
 	path, result string
-}{
+}
+
+var cleanTests = []cleanPathTest{
 	// Already clean
 	{"/", "/"},
 	{"/abc", "/abc"},
@@ -22,6 +22,7 @@ var cleanTests = []struct {
 
 	// missing root
 	{"", "/"},
+	{"a/", "/a/"},
 	{"abc", "/abc"},
 	{"abc/def", "/abc/def"},
 	{"a/b/c", "/a/b/c"},
@@ -51,7 +52,7 @@ var cleanTests = []struct {
 	{"../../abc", "/abc"},
 	{"/abc/def/ghi/../jkl", "/abc/def/jkl"},
 	{"/abc/def/../ghi/../jkl", "/abc/jkl"},
-	{"/abc/def/..", "/abc"},
+	{"/abc/def/..", "/abc/"},
 	{"/abc/def/../..", "/"},
 	{"/abc/def/../../..", "/"},
 	{"/abc/def/../../..", "/"},
@@ -63,30 +64,65 @@ var cleanTests = []struct {
 	{"abc/../../././../def", "/def"},
 }
 
-func TestPathClean(t *testing.T) {
+func Test_cleanPath(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.SkipNow()
+	}
+
+	req := new(fasthttp.Request)
+	uri := req.URI()
+
 	for _, test := range cleanTests {
-		if s := CleanPath(test.path); s != test.result {
-			t.Errorf("CleanPath(%q) = %q, want %q", test.path, s, test.result)
+		uri.SetPath(test.path)
+		if s := cleanPath(string(uri.Path())); s != test.result {
+			t.Errorf("cleanPath(%q) = %q, want %q", test.path, s, test.result)
 		}
-		if s := CleanPath(test.result); s != test.result {
-			t.Errorf("CleanPath(%q) = %q, want %q", test.result, s, test.result)
+
+		uri.SetPath(test.result)
+		if s := cleanPath(string(uri.Path())); s != test.result {
+			t.Errorf("cleanPath(%q) = %q, want %q", test.result, s, test.result)
 		}
 	}
 }
 
-func TestPathCleanMallocs(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping malloc count in short mode")
-	}
-	if runtime.GOMAXPROCS(0) > 1 {
-		t.Log("skipping AllocsPerRun checks; GOMAXPROCS>1")
-		return
+func TestGetOptionalPath(t *testing.T) {
+	handler := func(ctx *fasthttp.RequestCtx) {
+		ctx.SetStatusCode(fasthttp.StatusOK)
 	}
 
-	for _, test := range cleanTests {
-		allocs := testing.AllocsPerRun(100, func() { CleanPath(test.result) })
-		if allocs > 0 {
-			t.Errorf("CleanPath(%q): %v allocs, want zero", test.result, allocs)
+	expected := []struct {
+		path    string
+		tsr     bool
+		handler fasthttp.RequestHandler
+	}{
+		{"/show/{name}", false, handler},
+		{"/show/{name}/", true, nil},
+		{"/show/{name}/{surname}", false, handler},
+		{"/show/{name}/{surname}/", true, nil},
+		{"/show/{name}/{surname}/at", false, handler},
+		{"/show/{name}/{surname}/at/", true, nil},
+		{"/show/{name}/{surname}/at/{address}", false, handler},
+		{"/show/{name}/{surname}/at/{address}/", true, nil},
+		{"/show/{name}/{surname}/at/{address}/{id}", false, handler},
+		{"/show/{name}/{surname}/at/{address}/{id}/", true, nil},
+		{"/show/{name}/{surname}/at/{address}/{id}/{phone:.*}", false, handler},
+		{"/show/{name}/{surname}/at/{address}/{id}/{phone:.*}/", true, nil},
+	}
+
+	r := New()
+	r.GET("/show/{name}/{surname?}/at/{address?}/{id}/{phone?:.*}", handler)
+
+	for _, e := range expected {
+		ctx := new(fasthttp.RequestCtx)
+
+		h, tsr := r.Lookup("GET", e.path, ctx)
+
+		if tsr != e.tsr {
+			t.Errorf("TSR (path: %s) == %v, want %v", e.path, tsr, e.tsr)
+		}
+
+		if reflect.ValueOf(h).Pointer() != reflect.ValueOf(e.handler).Pointer() {
+			t.Errorf("Handler (path: %s) == %p, want %p", e.path, h, e.handler)
 		}
 	}
 }

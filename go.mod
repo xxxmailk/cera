@@ -9,3 +9,5 @@ require (
 	github.com/valyala/fasthttp v1.12.0
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
 )
+
+replace github.com/xxxmailk/cera => ./
