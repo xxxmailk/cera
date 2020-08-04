@@ -4,9 +4,9 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"github.com/valyala/fasthttp"
+	"github.com/xxxmailk/cera/log"
 	"golang.org/x/net/xsrftoken"
 	"html/template"
-	"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -88,6 +88,7 @@ type View struct {
 	Data   map[string]interface{} // stored user values
 	Ctx    *fasthttp.RequestCtx
 	Cookie *fasthttp.Cookie
+	Log    log.SimpleLogger
 }
 
 // combine this struct and rewrite those functions to reply http methods
@@ -97,21 +98,53 @@ func (r *View) Init() {
 
 func (r *View) Before() {}
 
-func (r *View) Get() { r.Html404() }
+func (r *View) Get() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with GET method error %s", err)
+	}
+}
 
-func (r *View) Head() { r.Html404() }
+func (r *View) Head() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Head method error %s", err)
+	}
+}
 
-func (r *View) Options() { r.Html404() }
+func (r *View) Options() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Option method error %s", err)
+	}
+}
 
-func (r *View) Post() { r.Html404() }
+func (r *View) Post() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Post method error %s", err)
+	}
+}
 
-func (r *View) Put() { r.Html404() }
+func (r *View) Put() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Put method error %s", err)
+	}
+}
 
-func (r *View) Patch() { r.Html404() }
+func (r *View) Patch() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Patch method error %s", err)
+	}
+}
 
-func (r *View) Delete() { r.Html404() }
+func (r *View) Delete() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Delete method error %s", err)
+	}
+}
 
-func (r *View) Trace() { r.Html404() }
+func (r *View) Trace() {
+	if err := r.Html404(); err != nil {
+		r.Log.Errorf("handle 404 with Trace method error %s", err)
+	}
+}
 
 func (r *View) After() {}
 
@@ -120,7 +153,7 @@ func (r *View) Render() {
 	r.Ctx.Response.Header.SetContentType("text/html; charset=utf-8")
 	err := t.ExecuteTemplate(r.Ctx.Response.BodyWriter(), r.Tpl, r.Data)
 	if err != nil {
-		log.Println(err)
+		r.Log.Errorf("render template failed, %s", err)
 		return
 	}
 }
@@ -240,7 +273,7 @@ func (r *View) setXsrfToken() {
 //	}
 //}
 
-func HtmlUnknownMethod(ctx *fasthttp.RequestCtx) {
+func HtmlUnknownMethod(ctx *fasthttp.RequestCtx) error {
 	html := `
 <html>
 <head>
@@ -253,11 +286,12 @@ func HtmlUnknownMethod(ctx *fasthttp.RequestCtx) {
 `
 	ctx.SetStatusCode(500)
 	if _, err := ctx.Write([]byte(html)); err != nil {
-		log.Print(err)
+		return err
 	}
+	return nil
 }
 
-func (r *View) Html404() {
+func (r *View) Html404() error {
 	html := `
 <body style="background:#000;text-align:center;">
 <span style="font-size:5em;color:#fff;"><b>404 Sorry, Page not found! :) </b></span>
@@ -266,6 +300,7 @@ func (r *View) Html404() {
 	r.Ctx.SetStatusCode(404)
 	r.Ctx.SetBodyString(html)
 	if _, err := r.Ctx.Write([]byte(html)); err != nil {
-		log.Print(err)
+		return err
 	}
+	return nil
 }

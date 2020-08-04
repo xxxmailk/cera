@@ -6,8 +6,8 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
+	"github.com/xxxmailk/cera/log"
 	"github.com/xxxmailk/cera/router"
 	"math/big"
 	"net"
@@ -15,22 +15,8 @@ import (
 	"time"
 )
 
-// simply logger
-type SimpleLogger interface {
-	Infof(string, ...interface{})
-	Warnf(string, ...interface{})
-	Debugf(string, ...interface{})
-	Errorf(string, ...interface{})
-	Fatalf(string, ...interface{})
-}
-
-func NewSimpleLogger() SimpleLogger {
-	l := logrus.New()
-	return l
-}
-
 type StartHttpServer interface {
-	SetLogger(l SimpleLogger)
+	SetLogger(l log.SimpleLogger)
 	SetHostname(hostname string)
 	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
@@ -40,7 +26,7 @@ type StartHttpServer interface {
 }
 
 type StartTlsServer interface {
-	SetLogger(l SimpleLogger)
+	SetLogger(l log.SimpleLogger)
 	SetHostname(hostname string)
 	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
@@ -54,7 +40,7 @@ type Serve struct {
 	port        string
 	idleTimeout time.Duration
 	hostname    string
-	logger      SimpleLogger
+	logger      log.SimpleLogger
 	handler     fasthttp.RequestHandler
 	sslKey      string
 	sslCert     string
@@ -75,7 +61,7 @@ func (s *Serve) SetHandle(h fasthttp.RequestHandler) {
 	s.handler = h
 }
 
-func (s *Serve) SetLogger(l SimpleLogger) {
+func (s *Serve) SetLogger(l log.SimpleLogger) {
 	s.logger = l
 }
 
@@ -153,7 +139,7 @@ func (s *Serve) StartTls() {
 // new simple http server
 // you can set your http server before start()
 func NewHttpServe(ip, port string) StartHttpServer {
-	l := NewSimpleLogger()
+	l := log.NewSimpleLogger()
 	host, err := os.Hostname()
 	if err != nil {
 		l.Fatalf(err.Error())
@@ -170,7 +156,7 @@ func NewHttpServe(ip, port string) StartHttpServer {
 
 // ditto ↑
 func NewTLSServe(ip, port string) StartTlsServer {
-	l := NewSimpleLogger()
+	l := log.NewSimpleLogger()
 	host, err := os.Hostname()
 	if err != nil {
 		l.Fatalf(err.Error())
