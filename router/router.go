@@ -145,6 +145,8 @@ func (f *FileHandle) Get() {
 	f.fileHandle(f.Ctx)
 }
 
+func (f *FileHandle) Render() {}
+
 // ServeFilesCustom serves files from the given file system settings.
 // The path must end with "/{filepath:*}", files are then served from the local
 // path /defined/root/dir/{filepath:*}.
@@ -190,7 +192,6 @@ func (r *Router) Handle(method, path string, handler view.MethodViewer) {
 	case handler == nil:
 		panic("handler must not be nil")
 	}
-	handler.SetLogger(r.Logger)
 	r.registeredPaths[method] = append(r.registeredPaths[method], path)
 
 	tree := r.trees[method]
