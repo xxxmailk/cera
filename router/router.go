@@ -45,11 +45,17 @@ func (r *Router) Group(path string) *Group {
 	}
 }
 
-func (r *Router) saveMatchedRoutePath(path string, handler fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		ctx.SetUserValue(MatchedRoutePathParam, path)
-		handler(ctx)
-	}
+// todo
+func (r *Router) saveMatchedRoutePath(path string, handler view.MethodViewer) view.MethodViewer {
+	//return func(ctx *fasthttp.RequestCtx) {
+	//	ctx.SetUserValue(MatchedRoutePathParam, path)
+	//	handler.SetCtx(ctx)
+	//	handler.Init()
+	//	view.Switcher(handler)
+	//}
+	ctx := handler.GetCtx()
+	ctx.SetUserValue(MatchedRoutePathParam, path)
+	return handler
 }
 
 // Mutable allows updating the route handler
@@ -81,34 +87,34 @@ func (r *Router) HEAD(path string, handler view.MethodViewer) {
 }
 
 // OPTIONS is a shortcut for router.Handle(fasthttp.MethodOptions, path, handler)
-func (r *Router) OPTIONS(path string, handler fasthttp.RequestHandler) {
+func (r *Router) OPTIONS(path string, handler view.MethodViewer) {
 	r.Handle(fasthttp.MethodOptions, path, handler)
 }
 
 // POST is a shortcut for router.Handle(fasthttp.MethodPost, path, handler)
-func (r *Router) POST(path string, handler fasthttp.RequestHandler) {
+func (r *Router) POST(path string, handler view.MethodViewer) {
 	r.Handle(fasthttp.MethodPost, path, handler)
 }
 
 // PUT is a shortcut for router.Handle(fasthttp.MethodPut, path, handler)
-func (r *Router) PUT(path string, handler fasthttp.RequestHandler) {
+func (r *Router) PUT(path string, handler view.MethodViewer) {
 	r.Handle(fasthttp.MethodPut, path, handler)
 }
 
 // PATCH is a shortcut for router.Handle(fasthttp.MethodPatch, path, handler)
-func (r *Router) PATCH(path string, handler fasthttp.RequestHandler) {
+func (r *Router) PATCH(path string, handler view.MethodViewer) {
 	r.Handle(fasthttp.MethodPatch, path, handler)
 }
 
 // DELETE is a shortcut for router.Handle(fasthttp.MethodDelete, path, handler)
-func (r *Router) DELETE(path string, handler fasthttp.RequestHandler) {
+func (r *Router) DELETE(path string, handler view.MethodViewer) {
 	r.Handle(fasthttp.MethodDelete, path, handler)
 }
 
 // ANY is a shortcut for router.Handle(router.MethodWild, path, handler)
 //
 // WARNING: Use only for routes where the request method is not important
-func (r *Router) ANY(path string, handler fasthttp.RequestHandler) {
+func (r *Router) ANY(path string, handler view.MethodViewer) {
 	r.Handle(MethodWild, path, handler)
 }
 
@@ -127,6 +133,16 @@ func (r *Router) ServeFiles(path string, rootPath string) {
 		GenerateIndexPages: true,
 		AcceptByteRange:    true,
 	})
+}
+
+type FileHandle struct {
+	fileHandle fasthttp.RequestHandler
+	ctx        fasthttp.RequestCtx
+	view.View
+}
+
+func (f *FileHandle) Get() {
+	f.fileHandle(f.Ctx)
 }
 
 // ServeFilesCustom serves files from the given file system settings.
@@ -151,7 +167,8 @@ func (r *Router) ServeFilesCustom(path string, fs *fasthttp.FS) {
 	if fs.PathRewrite == nil && stripSlashes > 0 {
 		fs.PathRewrite = fasthttp.NewPathSlashesStripper(stripSlashes)
 	}
-	fileHandler := fs.NewRequestHandler()
+
+	fileHandler := &FileHandle{fileHandle: fs.NewRequestHandler()}
 
 	r.GET(path, fileHandler)
 }
@@ -164,7 +181,7 @@ func (r *Router) ServeFilesCustom(path string, fs *fasthttp.FS) {
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (r *Router) Handle(method, path string, handler fasthttp.RequestHandler) {
+func (r *Router) Handle(method, path string, handler view.MethodViewer) {
 	switch {
 	case len(method) == 0:
 		panic("method must not be empty")

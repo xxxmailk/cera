@@ -1,6 +1,9 @@
 package router
 
-import "github.com/valyala/fasthttp"
+import (
+	"github.com/valyala/fasthttp"
+	"github.com/xxxmailk/cera/view"
+)
 
 // Group returns a new group.
 // Path auto-correction, including trailing slashes, is enabled by default.
@@ -9,44 +12,44 @@ func (g *Group) Group(path string) *Group {
 }
 
 // GET is a shortcut for group.Handle(fasthttp.MethodGet, path, handler)
-func (g *Group) GET(path string, handler fasthttp.RequestHandler) {
+func (g *Group) GET(path string, handler view.MethodViewer) {
 	g.router.GET(g.prefix+path, handler)
 }
 
 // HEAD is a shortcut for group.Handle(fasthttp.MethodHead, path, handler)
-func (g *Group) HEAD(path string, handler fasthttp.RequestHandler) {
+func (g *Group) HEAD(path string, handler view.MethodViewer) {
 	g.router.HEAD(g.prefix+path, handler)
 }
 
 // OPTIONS is a shortcut for group.Handle(fasthttp.MethodOptions, path, handler)
-func (g *Group) OPTIONS(path string, handler fasthttp.RequestHandler) {
+func (g *Group) OPTIONS(path string, handler view.MethodViewer) {
 	g.router.OPTIONS(g.prefix+path, handler)
 }
 
 // POST is a shortcut for group.Handle(fasthttp.MethodPost, path, handler)
-func (g *Group) POST(path string, handler fasthttp.RequestHandler) {
+func (g *Group) POST(path string, handler view.MethodViewer) {
 	g.router.POST(g.prefix+path, handler)
 }
 
 // PUT is a shortcut for group.Handle(fasthttp.MethodPut, path, handler)
-func (g *Group) PUT(path string, handler fasthttp.RequestHandler) {
+func (g *Group) PUT(path string, handler view.MethodViewer) {
 	g.router.PUT(g.prefix+path, handler)
 }
 
 // PATCH is a shortcut for group.Handle(fasthttp.MethodPatch, path, handler)
-func (g *Group) PATCH(path string, handler fasthttp.RequestHandler) {
+func (g *Group) PATCH(path string, handler view.MethodViewer) {
 	g.router.PATCH(g.prefix+path, handler)
 }
 
 // DELETE is a shortcut for group.Handle(fasthttp.MethodDelete, path, handler)
-func (g *Group) DELETE(path string, handler fasthttp.RequestHandler) {
+func (g *Group) DELETE(path string, handler view.MethodViewer) {
 	g.router.DELETE(g.prefix+path, handler)
 }
 
 // ANY is a shortcut for group.Handle(router.MethodWild, path, handler)
 //
 // WARNING: Use only for routes where the request method is not important
-func (g *Group) ANY(path string, handler fasthttp.RequestHandler) {
+func (g *Group) ANY(path string, handler view.MethodViewer) {
 	g.router.ANY(g.prefix+path, handler)
 }
 
@@ -83,6 +86,6 @@ func (g *Group) ServeFilesCustom(path string, fs *fasthttp.FS) {
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (g *Group) Handle(method, path string, handler fasthttp.RequestHandler) {
+func (g *Group) Handle(method, path string, handler view.MethodViewer) {
 	g.router.Handle(method, g.prefix+path, handler)
 }

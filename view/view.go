@@ -14,6 +14,11 @@ import (
 
 const CERASALT = "Crea@2019=="
 
+var (
+	HTMLContentType = []byte("text/plain; charset=utf-8")
+	JSONContentType = []byte("application/json; charset=utf-8")
+)
+
 func init() {
 	rand.Seed(time.Now().Unix())
 	sha1.New()
