@@ -1,12 +1,12 @@
 package radix
 
 import (
+	"github.com/valyala/fasthttp"
 	"github.com/xxxmailk/cera/view"
 	"sort"
 	"strings"
 
 	"github.com/valyala/bytebufferpool"
-	"github.com/valyala/fasthttp"
 )
 
 func newNode(path string) *node {
@@ -316,7 +316,7 @@ walk:
 						return child.handler, false
 					case child.wildcard != nil:
 						if ctx != nil {
-							ctx.SetUserValue(child.wildcard.paramKey, path)
+							child.handler.GetCtx().SetUserValue(child.wildcard.paramKey, path)
 						}
 
 						return child.wildcard.handler, false
@@ -343,7 +343,7 @@ walk:
 					} else if h != nil {
 						if ctx != nil {
 							for i, key := range child.paramKeys {
-								ctx.SetUserValue(key, values[i])
+								child.handler.GetCtx().SetUserValue(key, values[i])
 							}
 						}
 
@@ -359,7 +359,7 @@ walk:
 						continue
 					case ctx != nil:
 						for i, key := range child.paramKeys {
-							ctx.SetUserValue(key, values[i])
+							child.handler.GetCtx().SetUserValue(key, values[i])
 						}
 					}
 
@@ -389,7 +389,7 @@ walk:
 
 		if n.wildcard != nil {
 			if ctx != nil {
-				ctx.SetUserValue(n.wildcard.paramKey, path)
+				n.wildcard.handler.GetCtx().SetUserValue(n.wildcard.paramKey, path)
 			}
 
 			return n.wildcard.handler, false

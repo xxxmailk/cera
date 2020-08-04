@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/fasthttp/router/radix"
 	"github.com/valyala/fasthttp"
+	"github.com/xxxmailk/cera/router/radix"
 )
 
 // Router is a fasthttp.RequestHandler which can be used to dispatch requests to different

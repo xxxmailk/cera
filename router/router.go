@@ -5,10 +5,10 @@ import (
 	"github.com/xxxmailk/cera/view"
 	"strings"
 
-	"github.com/fasthttp/router/radix"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
+	"github.com/xxxmailk/cera/router/radix"
 )
 
 // MethodWild wild HTTP method
@@ -223,16 +223,16 @@ func (r *Router) Handle(method, path string, handler view.MethodViewer) {
 // If the path was found, it returns the handler function and the path parameter
 // values. Otherwise the third return value indicates whether a redirection to
 // the same path with an extra / without the trailing slash should be performed.
-func (r *Router) Lookup(method, path string, ctx *fasthttp.RequestCtx) (fasthttp.RequestHandler, bool) {
+func (r *Router) Lookup(method, path string, v view.MethodViewer) (view.MethodViewer, bool) {
 	if tree := r.trees[method]; tree != nil {
-		handler, tsr := tree.Get(path, ctx)
+		handler, tsr := tree.Get(path, v.GetCtx())
 		if handler != nil || tsr {
 			return handler, tsr
 		}
 	}
 
 	if tree := r.trees[MethodWild]; tree != nil {
-		return tree.Get(path, ctx)
+		return tree.Get(path, v.GetCtx())
 	}
 
 	return nil, false
@@ -363,7 +363,9 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 
 	if tree := r.trees[method]; tree != nil {
 		if handler, tsr := tree.Get(path, ctx); handler != nil {
-			handler(ctx)
+			handler.Init()
+			handler.SetCtx(ctx)
+			view.Switcher(handler)
 			return
 		} else if method != fasthttp.MethodConnect && path != "/" {
 			if ok := r.tryRedirect(ctx, tree, tsr, method, path); ok {
@@ -375,7 +377,9 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	// Try to search in the wild method tree
 	if tree := r.trees[MethodWild]; tree != nil {
 		if handler, tsr := tree.Get(path, ctx); handler != nil {
-			handler(ctx)
+			handler.Init()
+			handler.SetCtx(ctx)
+			view.Switcher(handler)
 			return
 		} else if method != fasthttp.MethodConnect && path != "/" {
 			if ok := r.tryRedirect(ctx, tree, tsr, method, path); ok {

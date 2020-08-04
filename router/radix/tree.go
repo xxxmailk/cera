@@ -1,11 +1,11 @@
 package radix
 
 import (
+	"github.com/valyala/fasthttp"
 	"github.com/xxxmailk/cera/view"
 	"strings"
 
 	"github.com/valyala/bytebufferpool"
-	"github.com/valyala/fasthttp"
 )
 
 // New returns an empty routes storage
@@ -87,7 +87,7 @@ func (t *Tree) Get(path string, ctx *fasthttp.RequestCtx) (view.MethodViewer, bo
 			return t.root.handler, false
 		case t.root.wildcard != nil:
 			if ctx != nil {
-				ctx.SetUserValue(t.root.wildcard.paramKey, "/")
+				t.root.wildcard.handler.GetCtx().SetUserValue(t.root.wildcard.paramKey, "/")
 			}
 
 			return t.root.wildcard.handler, false
