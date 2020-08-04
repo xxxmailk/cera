@@ -32,7 +32,7 @@ func NewSimpleLogger() SimpleLogger {
 type StartHttpServer interface {
 	SetLogger(l SimpleLogger)
 	SetHostname(hostname string)
-	SetRouter(handler router.IRouterHandler)
+	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
 	Start() error
 	UseMiddleWare(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
@@ -42,7 +42,7 @@ type StartHttpServer interface {
 type StartTlsServer interface {
 	SetLogger(l SimpleLogger)
 	SetHostname(hostname string)
-	SetRouter(handler router.IRouterHandler)
+	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
 	StartTls()
 	AtLast(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
@@ -58,7 +58,7 @@ type Serve struct {
 	handler     fasthttp.RequestHandler
 	sslKey      string
 	sslCert     string
-	router      router.IRouterHandler
+	router      *router.Router
 	middleWares []func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx
 	lastFunc    []func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx
 }
@@ -83,7 +83,7 @@ func (s *Serve) SetSslKeyCert(keyPath, certPath string) {
 	s.sslKey, s.sslCert = keyPath, certPath
 }
 
-func (s *Serve) SetRouter(handler router.IRouterHandler) {
+func (s *Serve) SetRouter(handler *router.Router) {
 	s.logger.Infof("set router %v \n", handler)
 	s.router = handler
 }
