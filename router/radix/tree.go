@@ -1,6 +1,7 @@
 package radix
 
 import (
+	"github.com/xxxmailk/cera/view"
 	"strings"
 
 	"github.com/valyala/bytebufferpool"
@@ -19,7 +20,7 @@ func New() *Tree {
 // Add adds a node with the given handle to the path.
 //
 // WARNING: Not concurrency-safe!
-func (t *Tree) Add(path string, handler fasthttp.RequestHandler) {
+func (t *Tree) Add(path string, handler view.MethodViewer) {
 	if !strings.HasPrefix(path, "/") {
 		panicf("path must begin with '/' in path '%s'", path)
 	} else if handler == nil {

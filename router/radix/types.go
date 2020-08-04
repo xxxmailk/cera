@@ -1,9 +1,8 @@
 package radix
 
 import (
+	"github.com/xxxmailk/cera/view"
 	"regexp"
-
-	"github.com/valyala/fasthttp"
 )
 
 type nodeType uint8
@@ -11,15 +10,16 @@ type nodeType uint8
 type nodeWildcard struct {
 	path     string
 	paramKey string
-	handler  fasthttp.RequestHandler
+	handler  view.MethodViewer
 }
 
 type node struct {
 	nType nodeType
 
-	path         string
-	tsr          bool
-	handler      fasthttp.RequestHandler
+	path string
+	tsr  bool
+	//handler      fasthttp.RequestHandler
+	handler      view.MethodViewer
 	hasWildChild bool
 	children     []*node
 	wildcard     *nodeWildcard

@@ -1,6 +1,7 @@
 package radix
 
 import (
+	"github.com/xxxmailk/cera/view"
 	"sort"
 	"strings"
 
@@ -103,7 +104,7 @@ func (n *node) findEndIndexAndValues(path string) (int, []string) {
 	return end, values
 }
 
-func (n *node) setHandler(handler fasthttp.RequestHandler, fullPath string) (*node, error) {
+func (n *node) setHandler(handler view.MethodViewer, fullPath string) (*node, error) {
 	if n.handler != nil || n.tsr {
 		return n, newRadixError(errSetHandler, fullPath)
 	}
@@ -134,7 +135,7 @@ func (n *node) setHandler(handler fasthttp.RequestHandler, fullPath string) (*no
 	return n, nil
 }
 
-func (n *node) insert(path, fullPath string, handler fasthttp.RequestHandler) (*node, error) {
+func (n *node) insert(path, fullPath string, handler view.MethodViewer) (*node, error) {
 	end := segmentEndIndex(path, true)
 	child := newNode(path)
 
@@ -219,7 +220,7 @@ func (n *node) insert(path, fullPath string, handler fasthttp.RequestHandler) (*
 }
 
 // add adds the handler to node for the given path
-func (n *node) add(path, fullPath string, handler fasthttp.RequestHandler) (*node, error) {
+func (n *node) add(path, fullPath string, handler view.MethodViewer) (*node, error) {
 	if len(path) == 0 {
 		return n.setHandler(handler, fullPath)
 	}
@@ -273,7 +274,7 @@ func (n *node) add(path, fullPath string, handler fasthttp.RequestHandler) (*nod
 	return n.insert(path, fullPath, handler)
 }
 
-func (n *node) getFromChild(path string, ctx *fasthttp.RequestCtx) (fasthttp.RequestHandler, bool) {
+func (n *node) getFromChild(path string, ctx *fasthttp.RequestCtx) (view.MethodViewer, bool) {
 	var parent *node
 
 	parentIndex, childIndex := 0, 0
