@@ -364,6 +364,7 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	if tree := r.trees[method]; tree != nil {
 		if handler, tsr := tree.Get(path, ctx); handler != nil {
 			handler.Init()
+			handler.SetLogger(r.Logger)
 			handler.SetCtx(ctx)
 			view.Switcher(handler)
 			return
@@ -378,6 +379,7 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	if tree := r.trees[MethodWild]; tree != nil {
 		if handler, tsr := tree.Get(path, ctx); handler != nil {
 			handler.Init()
+			handler.SetLogger(r.Logger)
 			handler.SetCtx(ctx)
 			view.Switcher(handler)
 			return
