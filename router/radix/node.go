@@ -389,7 +389,7 @@ walk:
 
 		if n.wildcard != nil {
 			if ctx != nil {
-				n.wildcard.handler.GetCtx().SetUserValue(n.wildcard.paramKey, path)
+				ctx.SetUserValue(n.wildcard.paramKey, path)
 			}
 
 			return n.wildcard.handler, false
