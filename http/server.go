@@ -70,7 +70,6 @@ func (s *Serve) SetSslKeyCert(keyPath, certPath string) {
 }
 
 func (s *Serve) SetRouter(handler *router.Router) {
-	s.logger.Infof("set router %v \n", handler)
 	s.router = handler
 }
 
@@ -84,6 +83,7 @@ func (s *Serve) Start() error {
 	if s.router == nil {
 		panic("please set router before server start server")
 	}
+	s.router.Logger = s.logger
 	s.logger.Infof("starting web server and listening on %s:%s", s.ip, s.port)
 	err := server.ListenAndServe(net.JoinHostPort(s.ip, s.port))
 	return err
