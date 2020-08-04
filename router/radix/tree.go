@@ -69,7 +69,7 @@ func (t *Tree) Add(path string, handler view.MethodViewer) {
 // If no handle can be found, a TSR (trailing slash redirect) recommendation is
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
-func (t *Tree) Get(path string, ctx *fasthttp.RequestCtx) (fasthttp.RequestHandler, bool) {
+func (t *Tree) Get(path string, ctx *fasthttp.RequestCtx) (view.MethodViewer, bool) {
 	if len(path) > len(t.root.path) {
 		if path[:len(t.root.path)] != t.root.path {
 			return nil, false
