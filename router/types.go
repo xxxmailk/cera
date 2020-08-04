@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/valyala/fasthttp"
+	"github.com/xxxmailk/cera/log"
 	"github.com/xxxmailk/cera/router/radix"
 )
 
@@ -74,6 +75,8 @@ type Router struct {
 
 	// Cached value of global (*) allowed methods
 	globalAllowed string
+
+	Logger log.SimpleLogger
 }
 
 // Group is a sub-router to group paths

@@ -36,6 +36,7 @@ type MethodViewer interface {
 	Delete()
 	Trace()
 	Render()
+	SetLogger(log.SimpleLogger)
 }
 
 type viewer interface {
@@ -88,7 +89,7 @@ type View struct {
 	Data   map[string]interface{} // stored user values
 	Ctx    *fasthttp.RequestCtx
 	Cookie *fasthttp.Cookie
-	Log    log.SimpleLogger
+	Logger log.SimpleLogger
 }
 
 // combine this struct and rewrite those functions to reply http methods
@@ -100,50 +101,54 @@ func (r *View) Before() {}
 
 func (r *View) Get() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with GET method error %s", err)
+		r.Logger.Errorf("handle 404 with GET method error %s", err)
 	}
 }
 
 func (r *View) Head() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Head method error %s", err)
+		r.Logger.Errorf("handle 404 with Head method error %s", err)
 	}
 }
 
 func (r *View) Options() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Option method error %s", err)
+		r.Logger.Errorf("handle 404 with Option method error %s", err)
 	}
 }
 
 func (r *View) Post() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Post method error %s", err)
+		r.Logger.Errorf("handle 404 with Post method error %s", err)
 	}
 }
 
 func (r *View) Put() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Put method error %s", err)
+		r.Logger.Errorf("handle 404 with Put method error %s", err)
 	}
 }
 
 func (r *View) Patch() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Patch method error %s", err)
+		r.Logger.Errorf("handle 404 with Patch method error %s", err)
 	}
 }
 
 func (r *View) Delete() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Delete method error %s", err)
+		r.Logger.Errorf("handle 404 with Delete method error %s", err)
 	}
 }
 
 func (r *View) Trace() {
 	if err := r.Html404(); err != nil {
-		r.Log.Errorf("handle 404 with Trace method error %s", err)
+		r.Logger.Errorf("handle 404 with Trace method error %s", err)
 	}
+}
+
+func (r *View) SetLogger(l log.SimpleLogger) {
+	r.Logger = l
 }
 
 func (r *View) After() {}
@@ -153,7 +158,7 @@ func (r *View) Render() {
 	r.Ctx.Response.Header.SetContentType("text/html; charset=utf-8")
 	err := t.ExecuteTemplate(r.Ctx.Response.BodyWriter(), r.Tpl, r.Data)
 	if err != nil {
-		r.Log.Errorf("render template failed, %s", err)
+		r.Logger.Errorf("render template failed, %s", err)
 		return
 	}
 }

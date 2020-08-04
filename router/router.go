@@ -190,7 +190,7 @@ func (r *Router) Handle(method, path string, handler view.MethodViewer) {
 	case handler == nil:
 		panic("handler must not be nil")
 	}
-
+	handler.SetLogger(r.Logger)
 	r.registeredPaths[method] = append(r.registeredPaths[method], path)
 
 	tree := r.trees[method]
