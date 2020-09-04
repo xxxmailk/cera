@@ -19,10 +19,10 @@ func main() {
 	logger.Formatter = &logrus.TextFormatter{}
 	logger.ReportCaller = true
 	h.SetLogger(logger)
-	au := auth.NewCreaAuth("root", "P@ssw0rd", "/login", "haha", 300, logger, []string{"/aa"})
+	au := auth.NewCeraAuth("root", "P@ssw0rd", "/login", "haha", 300, logger, []string{"/aa"})
 	h.UseMiddleWare(au)
 	acc := access.NewAccessMiddleware(logger)
-	h.UseMiddleWare(acc)
+	h.AtLast(acc)
 	h.SetRouter(r)
 	h.Start()
 }
