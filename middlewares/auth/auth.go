@@ -19,6 +19,7 @@ type CeraAuth struct {
 	SecurityKey string
 	ExpireTime  int64 // expire time: seconds
 	IgnoreUrls  []string
+	Resultor    CeraAuthResultor
 	Log         log.SimpleLogger
 	ctx         *fasthttp.RequestCtx
 	middlewares.Middleware
@@ -29,8 +30,8 @@ type CeraAuthClaims struct {
 	jwt.StandardClaims
 }
 
-type CreaAuthResultor interface {
-	JsonRs() ([]byte, error)
+type CeraAuthResultor interface {
+	JsonRs(token, iss, exp string) ([]byte, error)
 }
 
 type CeraAuthResult struct {
@@ -39,18 +40,28 @@ type CeraAuthResult struct {
 	ExpireAt string `json:"ExpiresAt"`
 }
 
-func (c *CeraAuthResult) JsonRs() ([]byte, error) {
+func (c *CeraAuthResult) JsonRs(token, iss, exp string) ([]byte, error) {
+	c.Token = token
+	c.IssuedAt = iss
+	c.ExpireAt = exp
 	return json.Marshal(c)
 }
 
-func NewCreaAuth(
+func NewCeraAuth(
 	username, password, loginUrl, securityKey string,
-	expiredTime int64, logger log.SimpleLogger,
+	expiredTime int64,
+	resultStruct CeraAuthResultor,
+	logger log.SimpleLogger,
 	ignoreUrls []string) *CeraAuth {
 	if loginUrl == "" {
 		loginUrl = "/crea_auth/login"
 	}
 	c := new(CeraAuth)
+	if resultStruct == nil {
+		c.Resultor = new(CeraAuthResult)
+	} else {
+		c.Resultor = resultStruct
+	}
 	c.Username = username
 	c.Password = password
 	c.LoginUrl = loginUrl
@@ -159,15 +170,14 @@ func (a *CeraAuth) login() {
 			Issuer:    a.Username,
 		},
 	}
-	rs := new(CeraAuthResult)
-	rs.ExpireAt = time.Unix(cla.StandardClaims.ExpiresAt, 0).Format(time.RFC3339)
-	rs.IssuedAt = time.Unix(cla.StandardClaims.IssuedAt, 0).Format(time.RFC3339)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cla)
-	rs.Token, err = token.SignedString([]byte(a.SecurityKey))
+	ExpireAt := time.Unix(cla.StandardClaims.ExpiresAt, 0).Format(time.RFC3339)
+	IssuedAt := time.Unix(cla.StandardClaims.IssuedAt, 0).Format(time.RFC3339)
+	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, cla)
+	Token, err := tk.SignedString([]byte(a.SecurityKey))
 	if err != nil {
 		a.Log.Debugf("signed token failed %s", err)
 	}
-	js, err := rs.JsonRs()
+	js, err := a.Resultor.JsonRs(Token, IssuedAt, ExpireAt)
 	if err != nil {
 		a.Log.Errorf("marshal json result failed %s", err)
 	}
