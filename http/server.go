@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"github.com/valyala/fasthttp"
 	"github.com/xxxmailk/cera/log"
+	"github.com/xxxmailk/cera/middlewares"
 	"github.com/xxxmailk/cera/router"
 	"math/big"
 	"net"
@@ -21,8 +22,8 @@ type StartHttpServer interface {
 	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
 	Start() error
-	UseMiddleWare(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
-	AtLast(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
+	UseMiddleWare(m middlewares.MiddlewareInterface)
+	AtLast(m middlewares.MiddlewareInterface)
 }
 
 type StartTlsServer interface {
@@ -31,8 +32,8 @@ type StartTlsServer interface {
 	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
 	StartTls()
-	AtLast(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
-	UseMiddleWare(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx)
+	AtLast(m middlewares.MiddlewareInterface)
+	UseMiddleWare(m middlewares.MiddlewareInterface)
 }
 
 type Serve struct {
@@ -45,8 +46,8 @@ type Serve struct {
 	sslKey      string
 	sslCert     string
 	router      *router.Router
-	middleWares []func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx
-	lastFunc    []func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx
+	middleWares []middlewares.MiddlewareInterface
+	lastFunc    []middlewares.MiddlewareInterface
 }
 
 func (s *Serve) SetIdleTimeout(sec int) {
@@ -219,11 +220,11 @@ func GenerateCert(host string) ([]byte, []byte, error) {
 	return b, p, err
 }
 
-func (s *Serve) UseMiddleWare(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx) {
+func (s *Serve) UseMiddleWare(m middlewares.MiddlewareInterface) {
 	s.middleWares = append(s.middleWares, m)
 }
 
-func (s *Serve) AtLast(m func(ctx *fasthttp.RequestCtx) *fasthttp.RequestCtx) {
+func (s *Serve) AtLast(m middlewares.MiddlewareInterface) {
 	s.lastFunc = append(s.lastFunc, m)
 }
 
@@ -236,11 +237,15 @@ func (s *Serve) httpHandler(ctx *fasthttp.RequestCtx) {
 	if len(s.middleWares) > 0 {
 		for i := len(s.middleWares); i >= 0; i-- {
 			if i > 0 {
-				ctx = s.middleWares[i-1](ctx)
+				mid := s.middleWares[i-1]
+				ctx = mid.Handle(ctx)
+				if mid.IsBreakHere() {
+					return
+				}
 			}
 		}
 	}
-
+	s.logger.Debugf("handle with router handler")
 	// transfer http contexts to router handler
 	s.router.Handler(ctx)
 
@@ -248,7 +253,11 @@ func (s *Serve) httpHandler(ctx *fasthttp.RequestCtx) {
 	if len(s.lastFunc) > 0 {
 		for i := len(s.lastFunc); i >= 0; i-- {
 			if i > 0 {
-				ctx = s.lastFunc[i-1](ctx)
+				last := s.lastFunc[i-1]
+				last.Handle(ctx)
+				if last.IsBreakHere() {
+					return
+				}
 			}
 		}
 	}

@@ -3,7 +3,7 @@ module github.com/xxxmailk/cera
 go 1.14
 
 require (
-	github.com/fasthttp/router v1.2.4
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/savsgio/gotils v0.0.0-20200616100644-13ff1fd2c28c
 	github.com/sirupsen/logrus v1.6.0
