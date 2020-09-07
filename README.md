@@ -2,15 +2,15 @@
 #### Cera是一个极简的http小框架，在阅读fasthttp的时候顺手编写的一个http框架雏形, 路由在fashttprouter基础上修改的，该框架建议作为学习娱乐使用，暂不建议用于生产环境，除非您熟悉cera源码
 
 支持功能如下：
-[ * ] 支持基本的mVC架构，没有对orm进行整合，个人觉得没有这个必要，如果需要使用orm框架请自行引用gorm等框架。
-[ * ] 支持基础http路由
-[ * ] 支持头部中间件和尾部处理（中间件）
-[ * ] View支持api view（json返回值）和web view
-[ * ] Render支持golang template渲染，通过渲染输出页面
-[ * ] 支持jwt基础功能，但暂未将token回调解析出的信息放入user结构中（暂未想到合理的安放方式）
-[   ] xrsf token计划支持
-[   ] session 计划支持
-[   ] 计划支持jinjia2模板
+- [x] 支持基本的mVC架构，没有对orm进行整合，个人觉得没有这个必要，如果需要使用orm框架请自行引用gorm等框架。
+- [x] 支持基础http路由
+- [x] 支持头部中间件和尾部处理（中间件）
+- [x] View支持api view（json返回值）和web view
+- [x] Render支持golang template渲染，通过渲染输出页面
+- [x] 支持jwt基础功能，但暂未将token回调解析出的信息放入user结构中（暂未想到合理的安放方式）
+- [ ] xrsf token计划支持
+- [ ] session 计划支持
+- [ ] 计划支持jinjia2模板
 
 #### 最简单的使用方式
 ##### 1. 创建基础的目录结构
