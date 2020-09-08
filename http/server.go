@@ -22,6 +22,7 @@ type StartHttpServer interface {
 	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
 	Start() error
+	Stop() error
 	UseMiddleWare(m middlewares.MiddlewareInterface)
 	AtLast(m middlewares.MiddlewareInterface)
 }
@@ -31,7 +32,8 @@ type StartTlsServer interface {
 	SetHostname(hostname string)
 	SetRouter(handler *router.Router)
 	SetIdleTimeout(sec int)
-	StartTls()
+	StartTls() error
+	Stop() error
 	AtLast(m middlewares.MiddlewareInterface)
 	UseMiddleWare(m middlewares.MiddlewareInterface)
 }
@@ -48,6 +50,7 @@ type Serve struct {
 	router      *router.Router
 	middleWares []middlewares.MiddlewareInterface
 	lastFunc    []middlewares.MiddlewareInterface
+	serv        *fasthttp.Server
 }
 
 func (s *Serve) SetIdleTimeout(sec int) {
@@ -65,6 +68,9 @@ func (s *Serve) SetHandle(h fasthttp.RequestHandler) {
 func (s *Serve) SetLogger(l log.SimpleLogger) {
 	s.logger = l
 }
+func (s *Serve) Stop() error {
+	return s.serv.Shutdown()
+}
 
 func (s *Serve) SetSslKeyCert(keyPath, certPath string) {
 	s.sslKey, s.sslCert = keyPath, certPath
@@ -76,7 +82,7 @@ func (s *Serve) SetRouter(handler *router.Router) {
 
 func (s *Serve) Start() error {
 	s.SetHandle(s.httpHandler)
-	server := &fasthttp.Server{
+	s.serv = &fasthttp.Server{
 		// allocation http handle with domain name
 		Handler:     s.handler,
 		IdleTimeout: s.idleTimeout,
@@ -86,11 +92,11 @@ func (s *Serve) Start() error {
 	}
 	s.router.Logger = s.logger
 	s.logger.Infof("starting web server and listening on %s:%s", s.ip, s.port)
-	err := server.ListenAndServe(net.JoinHostPort(s.ip, s.port))
+	err := s.serv.ListenAndServe(net.JoinHostPort(s.ip, s.port))
 	return err
 }
 
-func (s *Serve) StartTls() {
+func (s *Serve) StartTls() error {
 	s.SetHandle(s.httpHandler)
 	server := &fasthttp.Server{
 		// allocation http handle with domain name
@@ -112,11 +118,13 @@ func (s *Serve) StartTls() {
 
 		if err != nil {
 			s.logger.Errorf(err.Error())
+			return err
 		}
 
 		err = server.AppendCertEmbed(cert, priv)
 		if err != nil {
 			s.logger.Errorf(err.Error())
+			return err
 		}
 		if s.router == nil {
 			panic("please set router before server start server")
@@ -126,7 +134,7 @@ func (s *Serve) StartTls() {
 		if err != nil {
 			s.logger.Errorf(err.Error())
 		}
-		return
+		return err
 	}
 	s.logger.Infof("starting TLS web server and listening on %s:%s", s.ip, s.port)
 
@@ -134,7 +142,9 @@ func (s *Serve) StartTls() {
 	err := server.ListenAndServeTLS(s.port, s.sslCert, s.sslKey)
 	if err != nil {
 		s.logger.Fatalf(err.Error())
+		return err
 	}
+	return nil
 }
 
 // new simple http server
