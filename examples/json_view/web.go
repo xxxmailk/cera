@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/xxxmailk/cera/http"
 	"github.com/xxxmailk/cera/middlewares/access"
 	"github.com/xxxmailk/cera/middlewares/auth"
 	"github.com/xxxmailk/cera/router"
+	"sync"
+	"time"
 )
 
 func main() {
@@ -24,5 +27,15 @@ func main() {
 	acc := access.NewAccessMiddleware(logger)
 	h.AtLast(acc)
 	h.SetRouter(r)
+	var wg = new(sync.WaitGroup)
+	go stop(h, wg)
 	h.Start()
+	wg.Wait()
+}
+
+func stop(serve http.StartHttpServer, group *sync.WaitGroup) {
+	defer group.Done()
+	time.Sleep(5 * time.Second)
+	fmt.Println("stop http server")
+	fmt.Println("ok", serve.Stop())
 }
