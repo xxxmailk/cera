@@ -9,6 +9,7 @@ import (
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
 	"github.com/xxxmailk/cera/router/radix"
+	"github.com/xxxmailk/cera/router/deepcopy"
 )
 
 // MethodWild wild HTTP method
@@ -361,13 +362,16 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 
 	path := gotils.B2S(ctx.Request.URI().Path())
 	method := gotils.B2S(ctx.Request.Header.Method())
-
 	if tree := r.trees[method]; tree != nil {
 		if handler, tsr := tree.Get(path, ctx); handler != nil {
-			handler.Init()
-			handler.SetLogger(r.Logger)
-			handler.SetCtx(ctx)
-			view.Switcher(handler)
+			// Deep copy, fix that when concurrent calls are made, handler reuse will cause ctx to be incorrect
+			copiedHandler := deepcopy.Copy(handler)
+			if newHandler, ok := copiedHandler.(view.MethodViewer); ok {
+				newHandler.Init()
+				newHandler.SetLogger(r.Logger)
+				newHandler.SetCtx(ctx)
+				view.Switcher(newHandler)
+			}
 			return
 		} else if method != fasthttp.MethodConnect && path != "/" {
 			if ok := r.tryRedirect(ctx, tree, tsr, method, path); ok {
@@ -379,10 +383,14 @@ func (r *Router) Handler(ctx *fasthttp.RequestCtx) {
 	// Try to search in the wild method tree
 	if tree := r.trees[MethodWild]; tree != nil {
 		if handler, tsr := tree.Get(path, ctx); handler != nil {
-			handler.Init()
-			handler.SetLogger(r.Logger)
-			handler.SetCtx(ctx)
-			view.Switcher(handler)
+			// Deep copy, fix that when concurrent calls are made, handler reuse will cause ctx to be incorrect
+			copiedHandler := deepcopy.Copy(handler)
+			if newHandler, ok := copiedHandler.(view.MethodViewer); ok {
+				newHandler.Init()
+				newHandler.SetLogger(r.Logger)
+				newHandler.SetCtx(ctx)
+				view.Switcher(newHandler)
+			}
 			return
 		} else if method != fasthttp.MethodConnect && path != "/" {
 			if ok := r.tryRedirect(ctx, tree, tsr, method, path); ok {
