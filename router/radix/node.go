@@ -316,7 +316,7 @@ walk:
 						return child.handler, false
 					case child.wildcard != nil:
 						if ctx != nil {
-							child.handler.GetCtx().SetUserValue(child.wildcard.paramKey, path)
+							ctx.SetUserValue(child.wildcard.paramKey, path)
 						}
 
 						return child.wildcard.handler, false
@@ -343,7 +343,7 @@ walk:
 					} else if h != nil {
 						if ctx != nil {
 							for i, key := range child.paramKeys {
-								child.handler.GetCtx().SetUserValue(key, values[i])
+								ctx.SetUserValue(key, values[i])
 							}
 						}
 
@@ -359,7 +359,7 @@ walk:
 						continue
 					case ctx != nil:
 						for i, key := range child.paramKeys {
-							child.handler.GetCtx().SetUserValue(key, values[i])
+							ctx.SetUserValue(key, values[i])
 						}
 					}
 
