@@ -92,8 +92,16 @@ func (s *Serve) Start() error {
 	}
 	s.router.Logger = s.logger
 	s.logger.Infof("starting web server and listening on %s:%s", s.ip, s.port)
-	err := s.serv.ListenAndServe(net.JoinHostPort(s.ip, s.port))
-	return err
+	return s.ListenAndServe()
+}
+
+func (s *Serve) ListenAndServe() error {
+	addr := net.JoinHostPort(s.ip, s.port)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	return s.serv.Serve(ln)
 }
 
 func (s *Serve) StartTls() error {
